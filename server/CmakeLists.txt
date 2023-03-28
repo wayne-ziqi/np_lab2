@@ -1,0 +1,5 @@
+project(game_server)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+add_executable(game_server main.cpp Server.cpp Competition.cpp Player.cpp SNetController.cpp)

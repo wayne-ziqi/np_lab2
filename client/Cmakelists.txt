@@ -1,0 +1,35 @@
+project(game_client)
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
+
+find_package(Qt5 COMPONENTS Widgets Core Gui Qml Quick REQUIRED)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+# strange: should explicitly link QObject's subclass header
+set(HEADERS
+        include/Client.hpp
+        include/MainScene.hpp
+        )
+
+set(SOURCES
+        main.cpp
+        MainScene.cpp
+        TCPController.cpp
+        GTCPController.cpp
+        Client.cpp
+        )
+
+set(RESOURCES
+#        qml.qrc
+        )
+
+set(QMLS
+#        main.qml
+        )
+
+add_executable(${PROJECT_NAME} ${HEADERS}  ${SOURCES} ${RESOURCES} ${QMLS})
+
+target_link_libraries(game_client Qt::Widgets Qt5::Core Qt5::Gui Qt5::Qml Qt5::Quick)
