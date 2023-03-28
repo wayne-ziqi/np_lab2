@@ -238,7 +238,6 @@ void GClient::Client::logOut() {
 }
 
 void GClient::Client::makeMove(int mov) {
-    // TODO: send move to the server
     if (user_state != BUSY) {
         emit infoToLocal(genNotice("You can't make a move now"));
     } else {
