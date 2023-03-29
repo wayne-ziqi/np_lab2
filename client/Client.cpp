@@ -142,11 +142,12 @@ void GClient::Client::fetchPkt() {
                     info += "Vacancy";
                 } else if (flag == 0x02) {
                     info += "In Game";
+                    user_state = VACANCY;
                 } else if (flag == 0x03) {
                     info += "Offline";
+                    user_state = VACANCY;
                 }
                 emit infoToLocal(genNotice(info));
-                user_state = VACANCY;
                 break;
             }
             case 0x05: {
