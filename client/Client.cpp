@@ -104,20 +104,20 @@ void GClient::Client::fetchPkt() {
                     // user win
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nCongratulations, you won the game!";
+                    res += "\nCongratulations, you win!";
                     emit infoToLocal(res);
                     user_state = VACANCY;
                 } else if (flag == 0x02) {
                     // user lose
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nWhat a pity, you lost the game.";
+                    res += "\nWhat a pity, you lose.";
                     emit infoToLocal(res);
                     user_state = VACANCY;
                 } else if (flag == 0x03) {
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nYou were even.";
+                    res += "\nGame is a draw.";
                     emit infoToLocal(res);
                     user_state = VACANCY;
                 } else if (flag == 0x04) {
@@ -333,8 +333,10 @@ static std::string genMovEmoji(int mov) {
         return {"✋"};
     else if (mov == 0x03)   // scissors
         return {"✂️️"};   // ✌ is too small
-    else
+    else {
         assert(0);
+        exit(0);
+    }
 }
 
 QString GClient::Client::genResult(int userMov, int userStam, int oppoMov, int oppoStam) {

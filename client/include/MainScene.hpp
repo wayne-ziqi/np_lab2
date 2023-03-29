@@ -74,6 +74,7 @@ namespace GClient {
                                                                       QMessageBox::Yes | QMessageBox::No);
             if (reply == QMessageBox::Yes) {
                 emit didAcceptChallenge(oppo);
+                oppoEdit->setText(oppo);
             } else {
                 emit didRejectChallenge(oppo);
             }

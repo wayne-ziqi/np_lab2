@@ -11,6 +11,7 @@ int GServer::Competition::getPlayerNo(const std::string &name) const {
     if (name == player1->get_name()) return 1;
     if (name == player2->get_name()) return 2;
     assert(0);
+    exit(0);
 }
 
 void GServer::Competition::advanceCompState(const std::string &from_player, GServer::GMove gMove) {
@@ -130,6 +131,7 @@ int GServer::Competition::getResult(const std::string &player) {
         return 0x03;
     }
     assert(0);
+    exit(0);
 }
 
 GServer::GMove GServer::Competition::getLatestMove(const std::string &player) {
@@ -148,6 +150,7 @@ GServer::Player *GServer::Competition::getTheOther(const std::string &player) {
     if (player == player1->get_name())return player2;
     else if (player == player2->get_name()) return player1;
     assert(0);
+    exit(0);
 }
 
 

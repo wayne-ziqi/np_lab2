@@ -19,6 +19,7 @@ namespace GServer {
         // 0x03: make move,
         // 0x04: check opponent's state,
         // 0x05: request a challenge to opponent
+        // 0x07: msg sending
         uint8_t op;
         // op=0x04(check opponent state): 0x01: certain player, 0x02: all players
         // op=0x05(request a challenge to opponent) 0x01: send a request to opponent, 0x02: opponent's challenge accepted, 0x03: opponent's challenge declined
@@ -26,7 +27,7 @@ namespace GServer {
         char user_name[30];
         char oppo_name[30];
         uint8_t user_move;   //0x01: rock, 0x02: paper, 0x03: scissors
-
+        char msg[256];
         [[nodiscard]] std::string getUserName() const {
             char tmp_name[31];
             memset(tmp_name, 0, sizeof tmp_name);
@@ -49,6 +50,7 @@ namespace GServer {
         // 0x04: response to the opponent's state
         // 0x05: response to the challenge request
         // 0x06: information and warnings
+        // 0x07: p2p message sending
         uint8_t op;
         // op = 0x01 (rsp to register): 0x01: registration succeed, 0x02: registration failed, change user's name
         // op = 0x02 (rsp to quit game): 0x01: log out succeed, 0x02: out fail
@@ -62,6 +64,7 @@ namespace GServer {
         uint8_t oppo_move;
         uint8_t user_stamina;
         uint8_t oppo_stamina;
+        char msg[256];
 
         SndPacket() {
             memset(this, 0x0, sizeof(struct SndPacket));

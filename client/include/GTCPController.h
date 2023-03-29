@@ -25,9 +25,9 @@ namespace GClient {
         char user_name[30];
         char oppo_name[30];
         uint8_t user_move;   //0x01: rock, 0x02: paper, 0x03: scissors
+        char msg[256];
     };
 
-    // has total length of 127
     struct RcvPacket {
         // 0x01: response to the registration
         // 0x02: response to quit game
@@ -47,6 +47,7 @@ namespace GClient {
         uint8_t oppo_move;
         uint8_t user_stamina;
         uint8_t oppo_stamina;
+        char msg[256];
 
         [[nodiscard]] std::string getUserName() const {
             char tmp[31];
