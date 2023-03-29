@@ -265,7 +265,6 @@ void GClient::Client::checkOppoState(QString oppo_name) {
             checkNameFormat(oppo_name.toStdString());
             gtcpController.setSndPkt(0x04, 0x01, user_name, oppo_name.toStdString(), 0);
             gtcpController.send_data();
-            user_state = WAITING;
         } catch (CException &e) {
             if (e.excNo != NAME_ERR)
                 reset();

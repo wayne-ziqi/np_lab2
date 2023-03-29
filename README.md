@@ -3,7 +3,7 @@
 ## Bug
 ### 3.28
 * 三个client A, B, C，A 可以向 B C都发送挑战请求，但应当规定只可以发给一个（使用CONNECTING状态）。并设置超时机制，对方在10s内决定，否则拒绝
-  * fix: give alert when invite
+  * fix: oppo state information shouldn't change user state unless oppo is in game or offline
 
 ## TODO
 ### 3.28

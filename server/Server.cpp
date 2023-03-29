@@ -134,23 +134,28 @@ void GServer::Server::clientHandler(int client_socket) {
                         if (compID > 0) {
                             auto compit = getCompetition(compID);
                             if (compit != nullptr) {
-                                Player *player2 = compit->getTheOther(it->second.get_name());
-                                play_mtx.lock();
-                                player2->quit_comp();
-                                play_mtx.unlock();
-                                delCompetition(compID);
                                 std::string player1_name = it->second.get_name();
-                                std::string player2_name = player2->get_name();
-                                SndPacket snd_pkt;
-                                snd_pkt.setBasicData(0x04, 0x03, player2_name, user_name);
-                                try {   // try to inform player2
-                                    netController.send_data(player2->get_socket(), snd_pkt);
-                                } catch (SException &e) {
-                                    std::cout << "[Server]: Failed to send oppo offline info to " << player2_name
-                                              << std::endl;
+                                Player *player2 = compit->getTheOther(it->second.get_name());
+                                if (player2 != nullptr) {
+                                    play_mtx.lock();
+                                    player2->quit_comp();
+                                    play_mtx.unlock();
+                                    std::string player2_name = player2->get_name();
+                                    SndPacket snd_pkt;
+                                    snd_pkt.setBasicData(0x04, 0x03, player2_name, player1_name);
+                                    try {   // try to inform player2
+                                        netController.send_data(player2->get_socket(), snd_pkt);
+                                    } catch (SException &e) {
+                                        std::cout << "[Server]: Failed to send oppo offline info to " << player2_name
+                                                  << std::endl;
+                                    }
                                 }
+                                delCompetition(compID);
                             }
                         }
+                        SndPacket snd{};
+                        snd.setBasicData(0x06, 0x02, it->first, it->first);
+                        sendBroadCast(snd);
                         usr_mtx.lock();
                         players.erase(it);
                         usr_mtx.unlock();
@@ -158,7 +163,7 @@ void GServer::Server::clientHandler(int client_socket) {
                 }
                 std::cout << "[Server " << client_socket << "] User <" << user_name << "> exception: " << e.message
                           << std::endl;
-                break;
+                break;  // break loop for receive error
             } else if (e.excNo == COMP_DID_END) {
                 std::cout << "[Server " << client_socket << "] User <" << user_name << "> exception: " << e.message
                           << std::endl;
