@@ -17,7 +17,7 @@ namespace GClient {
             errInfo.append((char *) snd_pkt.user_name);
             throw CException(SEND_FAIL, errInfo);
         }
-        std::cout << "data sent with op: " << (int)snd_pkt.op << std::endl;
+        std::cout << "data sent with op: " << (int) snd_pkt.op << std::endl;
     }
 
     void GTCPController::recv_data() {
@@ -26,8 +26,7 @@ namespace GClient {
         if (read_n == 0) {
             connected = false;
             throw CException(CONNECT_CLOSE, "connection has been closed");
-        }
-        else if (read_n < 0)
+        } else if (read_n < 0)
             throw CException(RCV_INV, "receive error");
 
     }
@@ -45,5 +44,15 @@ namespace GClient {
 
     RcvPacket GTCPController::getRcvPkt() {
         return rcv_pkt;
+    }
+
+    void GTCPController::setSndPkt(int op, int flag, const std::string &user_name, const std::string &oppo_name,
+                                   const std::string &msg) {
+        memset(&snd_pkt, 0x00, sizeof(struct SndPacket));
+        snd_pkt.op = op;
+        snd_pkt.flag = flag;
+        memcpy(&snd_pkt.user_name, user_name.c_str(), user_name.length());
+        memcpy(&snd_pkt.oppo_name, oppo_name.c_str(), oppo_name.length());
+        memcpy(&snd_pkt.msg, msg.c_str(), msg.length());
     }
 } // GClient

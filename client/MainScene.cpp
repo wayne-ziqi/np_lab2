@@ -42,11 +42,30 @@ GClient::MainWidget::MainWidget() {
     topLeftLayout->addWidget(logOutButton);
 
     // top left layout configure
+    topLeftTitle->setStyleSheet("font-weight: bold");
     userNameEdit->setPlaceholderText("Your name");
     ipEdit->setText("127.0.0.1");
     ipEdit->setPlaceholderText("Server ip(format: x.x.x.x)");
     portSpinBox->setRange(0, 65535);
     portSpinBox->setValue(20154);
+
+    // Create mid left layout
+    auto *midLeftLayout = new QVBoxLayout;
+    auto *midLeftTitle = new QLabel("Chat Space");
+    midLeftTitle->setAlignment(Qt::AlignHCenter);
+    rcverEdit = new QLineEdit;
+    chatEdit = new QTextEdit;
+    msgButton = new QPushButton("Send");
+    midLeftLayout->addWidget(midLeftTitle);
+    midLeftLayout->addWidget(rcverEdit);
+    midLeftLayout->addWidget(chatEdit);
+    midLeftLayout->addWidget(msgButton);
+
+    midLeftTitle->setStyleSheet("font-weight: bold");
+
+    // mid left layout config
+    rcverEdit->setPlaceholderText("Choose a user to send a message");
+    chatEdit->setPlaceholderText("Say something ...");
 
     // Create bottom left layout
     auto *bottomLeftLayout = new QVBoxLayout;
@@ -64,7 +83,9 @@ GClient::MainWidget::MainWidget() {
     button1 = new QPushButton("Rock");
     button2 = new QPushButton("Paper");
     button3 = new QPushButton("Scissors");
+    quitButton = new QPushButton("Quit");
 
+    bottomLeftTitle->setStyleSheet("font-weight: bold");
     bottomLeftLayout->addWidget(bottomLeftTitle);
     bottomLeftLayout->addWidget(oppoTitle);
     bottomLeftLayout->addWidget(oppoEdit);
@@ -74,12 +95,13 @@ GClient::MainWidget::MainWidget() {
     bottomLeftLayout->addWidget(movTitle);
     hbox2->addWidget(button1), hbox2->addWidget(button2), hbox2->addWidget(button3);
     bottomLeftLayout->addLayout(hbox2);
+    bottomLeftLayout->addWidget(quitButton);
 
-    // bottom left configure
     oppoEdit->setPlaceholderText("Choose a user to challenge");
 
     // Add top and bottom layouts to left layout
     leftLayout->addLayout(topLeftLayout);
+    leftLayout->addLayout(midLeftLayout);
     leftLayout->addLayout(bottomLeftLayout);
 
     // Create right layout
@@ -93,6 +115,7 @@ GClient::MainWidget::MainWidget() {
     localInfoText->setReadOnly(true);
     topRightLayout->addWidget(topRightTitle);
     topRightLayout->addWidget(localInfoText);
+    topRightTitle->setStyleSheet("font-weight: bold");
 
     // Create bottom right layout
     auto *bottomRightLayout = new QVBoxLayout;
@@ -102,6 +125,8 @@ GClient::MainWidget::MainWidget() {
     globalInfoText->setReadOnly(true);
     bottomRightLayout->addWidget(bottomRightTitle);
     bottomRightLayout->addWidget(globalInfoText);
+
+    bottomRightTitle->setStyleSheet("font-weight: bold");
 
     // Add top and bottom layouts to right layout
     rightLayout->addLayout(topRightLayout);
@@ -122,6 +147,9 @@ GClient::MainWidget::MainWidget() {
     QObject::connect(logOutButton, &QPushButton::clicked, [=]() {
         emit didLogOut();
     });
+    QObject::connect(msgButton, &QPushButton::clicked, [=]() {
+        emit didSendMsg(rcverEdit->text(), chatEdit->toPlainText());
+    });
     QObject::connect(chkOppoButton, &QPushButton::clicked, [=]() {
         emit didChkStat(oppoEdit->text());
     });
@@ -139,5 +167,8 @@ GClient::MainWidget::MainWidget() {
     QObject::connect(button3, &QPushButton::clicked, [=]() {
         qDebug() << "Scissors clicked.";
         emit didMove(3);
+    });
+    QObject::connect(quitButton, &QPushButton::clicked, [=]() {
+        emit didQuit();
     });
 }

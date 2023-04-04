@@ -27,6 +27,10 @@ namespace GClient {
         QSpinBox *portSpinBox;
         QPushButton *logInButton;
         QPushButton *logOutButton;
+        // left mid
+        QLineEdit *rcverEdit;
+        QTextEdit *chatEdit;
+        QPushButton *msgButton;
         // left bottom
         QLineEdit *oppoEdit;
         QPushButton *inviteButton;
@@ -34,6 +38,7 @@ namespace GClient {
         QPushButton *button1;
         QPushButton *button2;
         QPushButton *button3;
+        QPushButton *quitButton;
         // right top
         QTextEdit *localInfoText;
         // right bottom
@@ -86,7 +91,11 @@ namespace GClient {
 
         void didLogOut();
 
+        void didSendMsg(QString rcver, QString msg);
+
         void didMove(int mov);
+
+        void didQuit();
 
         void didChkStat(QString oppo_name);
 

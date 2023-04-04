@@ -55,7 +55,11 @@ namespace GClient {
 
         void logOut();
 
+        void sendMsg(QString rcver, QString msg);
+
         void makeMove(int mov);
+
+        void quitGame();
 
         void checkOppoState(QString oppo_name);
 

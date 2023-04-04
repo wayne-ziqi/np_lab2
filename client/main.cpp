@@ -16,9 +16,11 @@ int main(int argc, char *argv[]) {
     QObject::connect(&client, &GClient::Client::incomeChallenge, &window, &GClient::MainWidget::processChallenge);
     QObject::connect(&window, &GClient::MainWidget::didSetID, &client, &GClient::Client::setID);
     QObject::connect(&window, &GClient::MainWidget::didLogOut, &client, &GClient::Client::logOut);
+    QObject::connect(&window, &GClient::MainWidget::didSendMsg, &client, &GClient::Client::sendMsg);
     QObject::connect(&window, &GClient::MainWidget::didChkStat, &client, &GClient::Client::checkOppoState);
     QObject::connect(&window, &GClient::MainWidget::didInvite, &client, &GClient::Client::inviteOppo);
     QObject::connect(&window, &GClient::MainWidget::didMove, &client, &GClient::Client::makeMove);
+    QObject::connect(&window, &GClient::MainWidget::didQuit, &client, &GClient::Client::quitGame);
     QObject::connect(&window, &GClient::MainWidget::didAcceptChallenge, &client, &GClient::Client::acceptChallenge);
     QObject::connect(&window, &GClient::MainWidget::didRejectChallenge, &client, &GClient::Client::rejectChallenge);
 

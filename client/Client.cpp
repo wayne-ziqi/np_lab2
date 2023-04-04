@@ -107,6 +107,7 @@ void GClient::Client::fetchPkt() {
                     res += "\nCongratulations, you win!";
                     emit infoToLocal(res);
                     user_state = VACANCY;
+                    vs_oppo.clear();
                 } else if (flag == 0x02) {
                     // user lose
                     assert(rcv_pkt.getOppoName() == vs_oppo);
@@ -114,17 +115,31 @@ void GClient::Client::fetchPkt() {
                     res += "\nWhat a pity, you lose.";
                     emit infoToLocal(res);
                     user_state = VACANCY;
+                    vs_oppo.clear();
                 } else if (flag == 0x03) {
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
                     res += "\nGame is a draw.";
                     emit infoToLocal(res);
                     user_state = VACANCY;
+                    vs_oppo.clear();
                 } else if (flag == 0x04) {
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
                     emit infoToLocal(res);
                     user_state = BUSY;
+                } else if (flag == 0x05) {
+                    std::string info("Your opponent <");
+                    info += vs_oppo;
+                    info += "> quit the game, so you won!";
+                    emit infoToLocal(info.c_str());
+                    user_state = VACANCY;
+                    vs_oppo.clear();
+                } else if (flag == 0x06) {
+                    std::string info("Your opponent <");
+                    info += vs_oppo;
+                    info += "> has made a move, please hurry up";
+                    emit infoToLocal(info.c_str());
                 }
                 break;
             }
@@ -144,10 +159,12 @@ void GClient::Client::fetchPkt() {
                     info += "In Game";
                     user_state = VACANCY;
                 } else if (flag == 0x03) {
+                    if(user_state == WAITING && !vs_oppo.empty() && vs_oppo == rcv_pkt.getOppoName()) vs_oppo.clear();
                     info += "Offline";
                     user_state = VACANCY;
+                    // reset for challenge request waiting
                 }
-                emit infoToLocal(genNotice(info));
+                emit infoToGlobal(genNotice(info));
                 break;
             }
             case 0x05: {
@@ -167,7 +184,6 @@ void GClient::Client::fetchPkt() {
                     user_state = BUSY;
                     vs_oppo = rcv_pkt.getOppoName();
                     std::string info("Player <");
-                    info += vs_oppo;
                     info += "> accepted your challenge";
                     info += "\n<=========game begins!=========>";
                     emit infoToLocal(genNotice(info));
@@ -177,6 +193,7 @@ void GClient::Client::fetchPkt() {
                     info += rcv_pkt.getOppoName();
                     info += "> rejected your challenge";
                     emit infoToLocal(genNotice(info));
+                    vs_oppo.clear();
                 }
                 break;
             }
@@ -189,14 +206,28 @@ void GClient::Client::fetchPkt() {
                     info += "> logged in";
                     emit infoToGlobal(genNotice(info));
                 } else if (flag == 0x02) {
+                    std::string oppo_name = rcv_pkt.getOppoName();
                     std::string info("Player <");
-                    info += rcv_pkt.getOppoName();
+                    info += oppo_name;
                     info += "> logged out";
                     emit infoToGlobal(genNotice(info));
+                    if (user_state == WAITING && !vs_oppo.empty() && vs_oppo == oppo_name) {
+                        qDebug()<< "clear " << oppo_name.c_str();
+                        user_state = VACANCY;
+                        vs_oppo.clear();
+                    }
                 }
                 break;
             }
-        }
+            case 0x07: {
+                std::string msgstr("<");
+                msgstr += rcv_pkt.getOppoName();
+                msgstr += "> messaged you: ";
+                msgstr += rcv_pkt.getMessage();
+                emit infoToGlobal(msgstr.c_str());
+                break;
+            }
+        }// switch(op)
     } catch (CException &e) {
         if (e.excNo == RCV_INV)  // received packet is invalid
             return;
@@ -257,6 +288,23 @@ void GClient::Client::makeMove(int mov) {
     }
 }
 
+void GClient::Client::quitGame() {
+    if (user_state != BUSY) {
+        emit infoToLocal(genNotice("You can't quit now"));
+    } else {
+        try {
+            gtcpController.setSndPkt(0x03, 0x00, user_name, vs_oppo, 0);
+            gtcpController.send_data();
+            user_state = VACANCY;
+            std::string info("You quit the game, so your opponent won.");
+            emit infoToLocal(info.c_str());
+        } catch (CException &e) {
+            reset();
+            emit infoToLocal(genNotice(e.message));
+        }
+    }
+}
+
 void GClient::Client::checkOppoState(QString oppo_name) {
     if (user_state != VACANCY) {
         emit infoToLocal(genNotice("You are not vacancy"));
@@ -275,12 +323,17 @@ void GClient::Client::checkOppoState(QString oppo_name) {
 }
 
 void GClient::Client::inviteOppo(QString oppo_name) {
+
     if (user_state != VACANCY) {
         emit infoToLocal(genNotice("You are not vacancy"));
     } else if (user_name == oppo_name.toStdString()) {
         emit infoToLocal(genNotice("You can't challenge yourself"));
     } else {
         try {
+            if (!vs_oppo.empty()) {
+                qDebug() << vs_oppo.c_str();
+                assert(0);
+            }
             checkNameFormat(oppo_name.toStdString());
             gtcpController.setSndPkt(0x05, 0x01, user_name, oppo_name.toStdString(), 0);
             gtcpController.send_data();
@@ -288,6 +341,7 @@ void GClient::Client::inviteOppo(QString oppo_name) {
             info += oppo_name.toStdString();
             info += "> is sent, please wait for response";
             emit infoToLocal(genNotice(info));
+            vs_oppo = oppo_name.toStdString();
             user_state = WAITING;
         } catch (CException &e) {
             if (e.excNo != NAME_ERR)
@@ -367,6 +421,39 @@ QString GClient::Client::genResult(int userMov, int userStam, int oppoMov, int o
 
     return {str.c_str()};
 }
+
+void GClient::Client::sendMsg(QString rcver, QString msg) {
+    if (user_state == OFFLINE) {
+        emit infoToLocal(genNotice("You are not online"));
+    } else if (rcver.toStdString() == user_name) {
+        emit infoToLocal(genNotice("You can't send message to yourself"));
+    } else {
+        try {
+            checkNameFormat(rcver.toStdString());
+            if (msg.isEmpty()) {
+                emit infoToLocal(genNotice("You can not send an empty message"));
+            } else if (msg.size() > 256) {
+                emit infoToLocal(genNotice("Please send a message in 256 characters"));
+            } else {
+                std::string rcverstr = rcver.toStdString();
+                std::string msgstr = msg.toStdString();
+                std::string glo("You messaged <");
+                glo += rcverstr;
+                glo += ">: ";
+                glo += msgstr;
+                emit infoToGlobal(glo.c_str());
+                gtcpController.setSndPkt(0x07, 0x00, user_name, rcverstr, msgstr);
+                gtcpController.send_data();
+            }
+        } catch (CException &e) {
+            if (e.excNo != NAME_ERR)
+                reset();
+            emit infoToLocal(genNotice(e.message));
+        }
+    }
+}
+
+
 
 
 

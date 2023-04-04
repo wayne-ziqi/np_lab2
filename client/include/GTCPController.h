@@ -52,13 +52,21 @@ namespace GClient {
         [[nodiscard]] std::string getUserName() const {
             char tmp[31];
             memset(tmp, 0, sizeof(tmp));
-            memcpy(tmp, user_name, 30);
+            memcpy(tmp, user_name, sizeof(user_name));
             return {tmp};
         }
+
         [[nodiscard]] std::string getOppoName() const {
             char tmp[31];
             memset(tmp, 0, sizeof(tmp));
-            memcpy(tmp, oppo_name, 30);
+            memcpy(tmp, oppo_name, sizeof(oppo_name));
+            return {tmp};
+        }
+
+        [[nodiscard]] std::string getMessage() const {
+            char tmp[257];
+            memset(tmp, 0, sizeof(tmp));
+            memcpy(tmp, msg, sizeof(msg));
             return {tmp};
         }
     };
@@ -76,6 +84,9 @@ namespace GClient {
         GTCPController(std::string &ip_str, int port) : TCPController(ip_str, port) {}
 
         void setSndPkt(int op, int flag, const std::string &user_name, const std::string &oppo_name, int user_move);
+
+        void
+        setSndPkt(int op, int flag, const std::string &user_name, const std::string &oppo_name, const std::string &msg);
 
         void send_data() override;
 

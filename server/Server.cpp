@@ -65,9 +65,25 @@ void GServer::Server::clientHandler(int client_socket) {
                     if (!comp->isReady())
                         throw SException(COMP_NOT_READY, "Competition's not online");
                     auto user_mov = (GMove) rcv_pkt.user_move;
-                    play_mtx.lock();
-                    comp->advanceCompState(user_name, user_mov);
-                    play_mtx.unlock();
+                    if (user_mov != 0x00) {
+                        play_mtx.lock();
+                        comp->advanceCompState(user_name, user_mov);
+                        play_mtx.unlock();
+                        SndPacket oppo_snd_pkt;
+                        oppo_snd_pkt.setBasicData(0x03, 0x06, oppo_name, user_name);
+                        netController.send_data(oppo->get_socket(), oppo_snd_pkt);
+                    } else {
+                        SndPacket oppo_snd_pkt;
+                        oppo_snd_pkt.setBasicData(0x03, 0x05, oppo_name, user_name);
+                        netController.send_data(oppo->get_socket(), oppo_snd_pkt);
+                        play_mtx.lock();
+                        user->quit_comp();
+                        oppo->quit_comp();
+                        play_mtx.unlock();
+                        delCompetition(compID);
+                        break;
+                    }
+
                     // 1 waiting 2 or 2 waiting 1
                     if (!comp->isCool() && !comp->isFinished())
                         break;
@@ -105,15 +121,21 @@ void GServer::Server::clientHandler(int client_socket) {
                         for (auto &player: players) {
                             checkUserState(player.first, user_name, client_socket);
                         }
-                        // send end of sending packet
-                        SndPacket snd_pkt;
-                        snd_pkt.setBasicData(0x04, 0x04, user_name, {});
-                        netController.send_data(client_socket, snd_pkt);
                     }
                     break;
                 }
                 case 0x05: {
                     handleChallenge(user_name, client_socket, rcv_pkt);
+                    break;
+                }
+                case 0x06:
+                    break;    // broadcast message, should never incoming
+                case 0x07: {
+                    Player *player2 = checkUserPresence(rcv_pkt.getOppoName(), user_name, client_socket);
+                    SndPacket pkt{};
+                    pkt.setBasicData(0x07, 0x00, player2->get_name(), user_name);
+                    memcpy(pkt.msg, rcv_pkt.msg, sizeof(rcv_pkt.msg));
+                    netController.send_data(player2->get_socket(), pkt);
                     break;
                 }
             }// switch(op)

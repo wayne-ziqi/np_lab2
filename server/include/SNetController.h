@@ -54,7 +54,7 @@ namespace GServer {
         uint8_t op;
         // op = 0x01 (rsp to register): 0x01: registration succeed, 0x02: registration failed, change user's name
         // op = 0x02 (rsp to quit game): 0x01: log out succeed, 0x02: out fail
-        // op = 0x03 (rsp to move):  0x01: user win, 0x02: user lose, 0x03: even, 0x04: not finished ,move stored in oppo_move
+        // op = 0x03 (rsp to move):  0x01: user win, 0x02: user lose, 0x03: even, 0x04: not finished ,move stored in oppo_move, 0x05: user give up, 0x06: use has moved, send a hurry to the oppo
         // op = 0x04 (rsp to opponent's state): 0x01: available, 0x02: occupied, 0x03: offline, 0x04: end of sending for all players
         // op = 0x05 (rsp to challenge request): 0x01: request sent from the opponent, 0x02: request accepted, 0x03: request declined
         // op = 0x06 (send broadcast) 0x01: the opponent is online, 0x02: the opponent is offline
