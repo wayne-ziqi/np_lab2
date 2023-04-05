@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     // connect signal-slot
     QObject::connect(&client, &GClient::Client::infoToLocal, &window, &GClient::MainWidget::processLocalInfo);
     QObject::connect(&client, &GClient::Client::infoToGlobal, &window, &GClient::MainWidget::processGlobalInfo);
+    QObject::connect(&client, &GClient::Client::infoToBoard, &window, &GClient::MainWidget::processBoardInfo);
     QObject::connect(&client, &GClient::Client::updateUserState, &window, &GClient::MainWidget::processState);
     QObject::connect(&client, &GClient::Client::incomeChallenge, &window, &GClient::MainWidget::processChallenge);
     QObject::connect(&window, &GClient::MainWidget::didSetID, &client, &GClient::Client::setID);

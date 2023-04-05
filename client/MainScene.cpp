@@ -117,19 +117,30 @@ GClient::MainWidget::MainWidget() {
     topRightLayout->addWidget(localInfoText);
     topRightTitle->setStyleSheet("font-weight: bold");
 
-    // Create bottom right layout
-    auto *bottomRightLayout = new QVBoxLayout;
-    auto *bottomRightTitle = new QLabel("Global information");
-    bottomRightTitle->setAlignment(Qt::AlignHCenter);
+    // Create mid right layout
+    auto *midRightLayout = new QVBoxLayout;
+    auto *midRightTitle = new QLabel("Global information");
+    midRightTitle->setAlignment(Qt::AlignHCenter);
     globalInfoText = new QTextEdit;
     globalInfoText->setReadOnly(true);
-    bottomRightLayout->addWidget(bottomRightTitle);
-    bottomRightLayout->addWidget(globalInfoText);
+    midRightLayout->addWidget(midRightTitle);
+    midRightLayout->addWidget(globalInfoText);
+    midRightTitle->setStyleSheet("font-weight: bold");
 
+    // Create bottom right layout
+    auto *bottomRightLayout = new QVBoxLayout;
+    auto *bottomRightTitle = new QLabel("Game information");
+    bottomRightTitle->setAlignment(Qt::AlignHCenter);
+    boardInfoText = new QTextEdit;
+    boardInfoText->setReadOnly(true);
+    bottomRightLayout->addWidget(bottomRightTitle);
+    bottomRightLayout->addWidget(boardInfoText);
     bottomRightTitle->setStyleSheet("font-weight: bold");
+
 
     // Add top and bottom layouts to right layout
     rightLayout->addLayout(topRightLayout);
+    rightLayout->addLayout(midRightLayout);
     rightLayout->addLayout(bottomRightLayout);
 
     // Create main layout and add left and right layouts
@@ -139,6 +150,9 @@ GClient::MainWidget::MainWidget() {
 
     // Set main layout
     this->setLayout(mainLayout);
+
+    // config challenge dialog
+    chDialog = new ToMsgBox(this);
 
     // Connect buttons to slot
     QObject::connect(logInButton, &QPushButton::clicked, [=]() {

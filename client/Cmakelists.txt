@@ -12,7 +12,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(HEADERS
         include/Client.hpp
         include/MainScene.hpp
-        )
+        include/ToMsgBox.hpp)
 
 set(SOURCES
         main.cpp

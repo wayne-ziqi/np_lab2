@@ -60,7 +60,7 @@ void GClient::Client::fetchPkt() {
                     info += user_name;
                     info += "> logged in successfully";
                     emit infoToLocal(genNotice(info));
-                    user_state = VACANCY;
+                    setVacancy();
                 } else if (flag == 0x02) {
                     std::string info("this user<");
                     info += user_name;
@@ -104,42 +104,38 @@ void GClient::Client::fetchPkt() {
                     // user win
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nCongratulations, you win!";
-                    emit infoToLocal(res);
-                    user_state = VACANCY;
-                    vs_oppo.clear();
+                    res += "\nCongratulations, you win!\n<=========game ends.=========>";
+                    emit infoToBoard(res);
+                    setVacancy();
                 } else if (flag == 0x02) {
                     // user lose
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nWhat a pity, you lose.";
-                    emit infoToLocal(res);
-                    user_state = VACANCY;
-                    vs_oppo.clear();
+                    res += "\nWhat a pity, you lose.\n<=========game ends.=========>";
+                    emit infoToBoard(res);
+                    setVacancy();
                 } else if (flag == 0x03) {
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    res += "\nGame is a draw.";
-                    emit infoToLocal(res);
-                    user_state = VACANCY;
-                    vs_oppo.clear();
+                    res += "\nGame is a draw.\n<=========game ends.=========>";
+                    emit infoToBoard(res);
+                    setVacancy();
                 } else if (flag == 0x04) {
                     assert(rcv_pkt.getOppoName() == vs_oppo);
                     QString res = genResult(lastMov, rcv_pkt.user_stamina, rcv_pkt.oppo_move, rcv_pkt.oppo_stamina);
-                    emit infoToLocal(res);
+                    emit infoToBoard(res);
                     user_state = BUSY;
                 } else if (flag == 0x05) {
                     std::string info("Your opponent <");
                     info += vs_oppo;
-                    info += "> quit the game, so you won!";
-                    emit infoToLocal(info.c_str());
-                    user_state = VACANCY;
-                    vs_oppo.clear();
+                    info += "> quit the game\n<=========game ends.=========>";
+                    emit infoToBoard(info.c_str());
+                    setVacancy();
                 } else if (flag == 0x06) {
                     std::string info("Your opponent <");
                     info += vs_oppo;
-                    info += "> has made a move, please hurry up";
-                    emit infoToLocal(info.c_str());
+                    info += "> has made a move";
+                    emit infoToBoard(info.c_str());
                 }
                 break;
             }
@@ -147,7 +143,7 @@ void GClient::Client::fetchPkt() {
                 int flag = rcv_pkt.flag;
                 if (flag <= 0 || flag >= 4) {
                     qDebug() << "Error flag in rcv: op: 0x04, flag: " << flag;
-                    user_state = VACANCY;
+                    setVacancy();
                     break;
                 }
                 std::string info("Player <");
@@ -157,12 +153,11 @@ void GClient::Client::fetchPkt() {
                     info += "Vacancy";
                 } else if (flag == 0x02) {
                     info += "In Game";
-                    user_state = VACANCY;
+                    setVacancy();
                 } else if (flag == 0x03) {
-                    if(user_state == WAITING && !vs_oppo.empty() && vs_oppo == rcv_pkt.getOppoName()) vs_oppo.clear();
-                    info += "Offline";
-                    user_state = VACANCY;
                     // reset for challenge request waiting
+                    if ((user_state == WAITING && !vs_oppo.empty() || user_state == BUSY )&& vs_oppo == rcv_pkt.getOppoName()) setVacancy();
+                    info += "Offline";
                 }
                 emit infoToGlobal(genNotice(info));
                 break;
@@ -184,16 +179,16 @@ void GClient::Client::fetchPkt() {
                     user_state = BUSY;
                     vs_oppo = rcv_pkt.getOppoName();
                     std::string info("Player <");
+                    info += rcv_pkt.getOppoName();
                     info += "> accepted your challenge";
                     info += "\n<=========game begins!=========>";
-                    emit infoToLocal(genNotice(info));
+                    emit infoToBoard(genNotice(info));
                 } else if (flag == 0x03) {
-                    user_state = VACANCY;
+                    setVacancy();
                     std::string info("Player <");
                     info += rcv_pkt.getOppoName();
                     info += "> rejected your challenge";
                     emit infoToLocal(genNotice(info));
-                    vs_oppo.clear();
                 }
                 break;
             }
@@ -212,9 +207,8 @@ void GClient::Client::fetchPkt() {
                     info += "> logged out";
                     emit infoToGlobal(genNotice(info));
                     if (user_state == WAITING && !vs_oppo.empty() && vs_oppo == oppo_name) {
-                        qDebug()<< "clear " << oppo_name.c_str();
-                        user_state = VACANCY;
-                        vs_oppo.clear();
+                        qDebug() << "clear " << oppo_name.c_str();
+                        setVacancy();
                     }
                 }
                 break;
@@ -257,6 +251,8 @@ void GClient::Client::checkNameFormat(const std::string &name) {
 void GClient::Client::logOut() {
     if (user_state == OFFLINE) {
         emit infoToLocal(genNotice("You are not online"));
+    }else if(user_state == BUSY){
+        emit infoToLocal(genNotice("You are in game, please quit game and try again"));
     } else {
         try {
             gtcpController.setSndPkt(0x02, 0x00, user_name, {}, 0);
@@ -280,7 +276,7 @@ void GClient::Client::makeMove(int mov) {
             user_state = WAITING;
             std::string info("Your move: ");
             info += genMovEmoji(lastMov);
-            emit infoToLocal(genNotice(info));
+            emit infoToBoard(genNotice(info));
         } catch (CException &e) {
             reset();
             emit infoToLocal(genNotice(e.message));
@@ -295,9 +291,9 @@ void GClient::Client::quitGame() {
         try {
             gtcpController.setSndPkt(0x03, 0x00, user_name, vs_oppo, 0);
             gtcpController.send_data();
-            user_state = VACANCY;
-            std::string info("You quit the game, so your opponent won.");
-            emit infoToLocal(info.c_str());
+            setVacancy();
+            std::string info("You quit the game.\n<=========game ends.=========>");
+            emit infoToBoard(info.c_str());
         } catch (CException &e) {
             reset();
             emit infoToLocal(genNotice(e.message));
@@ -359,7 +355,7 @@ void GClient::Client::acceptChallenge(QString oppo_name) {
         std::string info("You accepted challenge from player <");
         info += oppo_name.toStdString();
         info += ">\n<=========game begins!=========>";
-        emit infoToLocal(genNotice(info));
+        emit infoToBoard(genNotice(info));
         user_state = BUSY;
         vs_oppo = oppo_name.toStdString();
     } catch (CException &e) {
@@ -422,6 +418,7 @@ QString GClient::Client::genResult(int userMov, int userStam, int oppoMov, int o
     return {str.c_str()};
 }
 
+
 void GClient::Client::sendMsg(QString rcver, QString msg) {
     if (user_state == OFFLINE) {
         emit infoToLocal(genNotice("You are not online"));
@@ -452,6 +449,15 @@ void GClient::Client::sendMsg(QString rcver, QString msg) {
         }
     }
 }
+
+void GClient::Client::setVacancy() {
+    user_state = VACANCY;
+    vs_oppo.clear();
+}
+
+
+
+
 
 
 

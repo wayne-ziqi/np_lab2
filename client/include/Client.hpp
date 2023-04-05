@@ -35,6 +35,8 @@ namespace GClient {
 
         void reset();
 
+        void setVacancy();
+
     public:
 
         Client(QObject *parent = nullptr) : QObject(parent), user_state(OFFLINE) {
@@ -76,6 +78,8 @@ namespace GClient {
         void infoToLocal(QString info);
 
         void infoToGlobal(QString info);
+
+        void infoToBoard(QString info);
 
         void incomeChallenge(QString oppo);
     };

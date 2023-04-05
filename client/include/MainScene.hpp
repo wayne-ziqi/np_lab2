@@ -15,6 +15,7 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QTimer>
+#include "ToMsgBox.hpp"
 
 namespace GClient {
     class MainWidget : public QWidget {
@@ -41,8 +42,13 @@ namespace GClient {
         QPushButton *quitButton;
         // right top
         QTextEdit *localInfoText;
-        // right bottom
+        // right mid
         QTextEdit *globalInfoText;
+        // right bottom
+        QTextEdit *boardInfoText;
+
+        // timeout dialog
+        ToMsgBox *chDialog;
 
     public:
         MainWidget();
@@ -55,6 +61,10 @@ namespace GClient {
 
         void processGlobalInfo(QString info) {
             globalInfoText->append(info);
+        }
+
+        void processBoardInfo(QString info) {
+            boardInfoText->append(info);
         }
 
         void processState(int state) {
@@ -72,15 +82,14 @@ namespace GClient {
         }
 
         void processChallenge(QString oppo) {
-            QString info("Player <");
-            info += oppo;
-            info += "> has sent a challenge to you, do you accept? Please response in 10 seconds";
-            QMessageBox::StandardButton reply = QMessageBox::question(this, "Your are challenged", info,
-                                                                      QMessageBox::Yes | QMessageBox::No);
-            if (reply == QMessageBox::Yes) {
+            chDialog->showMsg("Your are challenged",
+                              "Player <" + oppo +
+                              "> has sent a challenge to you, do you accept? Please response in 5 seconds");
+            int ret = chDialog->exec();
+            if (ret == QMessageBox::Yes) {
                 emit didAcceptChallenge(oppo);
                 oppoEdit->setText(oppo);
-            } else {
+            } else if (ret == QMessageBox::No || ret == QDialog::Rejected) {
                 emit didRejectChallenge(oppo);
             }
         }
